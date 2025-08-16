@@ -1,0 +1,47 @@
+# -------------------------
+# Node.js / TypeScript repo
+# Applies to all subprojects
+# -------------------------
+
+# Node modules
+**/node_modules/
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# Dependency directories
+**/jspm_packages/
+
+# TypeScript build output
+**/dist/
+**/build/
+**/out/
+
+# TypeScript incremental build info
+*.tsbuildinfo
+
+# Env files (don’t commit secrets!)
+**/.env
+**/.env.*.local
+
+# IDE/editor settings
+.vscode/
+.idea/
+*.swp
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Coverage / testing
+**/coverage/

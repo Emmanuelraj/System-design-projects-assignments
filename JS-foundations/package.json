@@ -1,0 +1,19 @@
+{
+  "name": "js-foundations",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "start": "tsc && node dist/index.js",
+    "easy": "tsc && node dist/easy.js",
+    "medium": "tsc && node dist/medium.js",
+    "hard": "tsc && node dist/hard.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "devDependencies": {
+    "@types/node": "^24.3.0",
+    "typescript": "^5.9.2"
+  }
+}
