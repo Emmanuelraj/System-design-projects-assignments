@@ -1,0 +1,28 @@
+{
+  "name": "http_server",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "start": "tsc && node dist/index.js",
+    "easy": "tsc && node dist/server.js",
+    "medium": "tsc && node dist/auth.js",
+    "hard": "tsc && node dist/hard.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "devDependencies": {
+    "@types/node": "^24.3.0",
+    "dotenv": "^17.2.1",
+    "typescript": "^5.9.2"
+  },
+  "dependencies": {
+    "@types/express": "^5.0.3",
+    "@types/jsonwebtoken": "^9.0.10",
+    "express": "^5.1.0",
+    "json": "^11.0.0",
+    "jsonwebtoken": "^9.0.2",
+    "ts-node": "^10.9.2"
+  }
+}
