@@ -1,0 +1,19 @@
+{
+  "name": "simple-app",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "start": "tsc && node dist/index.js",
+    "easy": "tsc && node dist/easy.js",
+    "medium": "tsc && node dist/medium.js",
+    "hard": "tsc && node dist/hard.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "devDependencies": {
+    "@types/express": "^5.0.3",
+    "express": "^5.1.0"
+  }
+}
