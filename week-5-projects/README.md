@@ -1,15 +1,13 @@
-Here’s a **README.md** draft for your backend projects:
-
-````markdown
 # Backend Projects
 
-This repository contains two backend projects built with **Node.js** and **TypeScript**, demonstrating both **NoSQL** and **SQL** database integrations, along with authentication, authorization, and deployment practices.  
+This repository contains two backend projects implemented with **Node.js** and **TypeScript**.  
+They demonstrate both **NoSQL (MongoDB Atlas)** and **SQL (Prisma ORM)** setups, including **JWT Authentication & Authorization**, containerization with **Docker**, and deployment on **AWS EC2**.  
 
 ---
 
-## 📚 Projects
+## 📂 Projects
 
-### 1. Course Selling Application (Backend)
+### 1. Course Selling Application
 - **Features**
   - User Signup & Login
   - JWT-based Authentication & Authorization
@@ -32,11 +30,14 @@ This repository contains two backend projects built with **Node.js** and **TypeS
 ---
 
 ## 🐳 Docker
-- Each project will include a **Dockerfile**.
-- Docker images can be built to containerize the applications.
-- Deployment-ready once integrated with Docker.
+- Each project will include its own **Dockerfile**.
+- Build Docker images with:
+  ```bash
+  docker build -t project-name .
 
----
+
+docker run -p 3000:3000 project-name
+
 
 ## ☁️ Deployment (AWS EC2)
 - Plan to deploy both backends on **AWS EC2**.
@@ -45,51 +46,3 @@ This repository contains two backend projects built with **Node.js** and **TypeS
   2. Installing Node.js & Docker
   3. Running the application container(s)
   4. Configuring security groups for access
-
----
-
-## 🚀 Getting Started
-
-### Prerequisites
-- Node.js (v18+ recommended)
-- TypeScript
-- MongoDB Atlas (for Course Selling App)
-- SQL Database (for Medium Blog Backend)
-- Docker (for containerization)
-- AWS account (for deployment)
-
-### Installation
-Clone the repository:
-```bash
-git clone https://github.com/your-username/backend-projects.git
-cd backend-projects
-````
-
-Install dependencies:
-
-```bash
-npm install
-```
-
-Run in development mode:
-
-```bash
-npm run dev
-```
-
-Build and run in production:
-
-```bash
-npm run build
-npm start
-```
-
----
-
-## 📌 Roadmap
-
-* [x] Implement authentication (JWT)
-* [x] Add database schemas/models
-* [ ] Write Dockerfiles
-* [ ] Deploy on AWS EC2
-
