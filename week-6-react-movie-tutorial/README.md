@@ -9,8 +9,6 @@ the npm create vite@latest
 vite is lightweight 
 
 
-
-
 npm install 
 
 
