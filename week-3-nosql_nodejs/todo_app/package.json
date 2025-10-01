@@ -12,10 +12,12 @@
   "devDependencies": {
     "@types/bcrypt": "^6.0.0",
     "@types/body-parser": "^1.19.6",
-    "@types/express": "^5.0.3",
+    "@types/express": "github:types/express",
     "@types/jsonwebtoken": "^9.0.10",
     "@types/mongoose": "^5.11.97",
+    "@types/node": "^24.5.2",
     "body-parser": "^2.2.0",
+    "dotenv": "^17.2.2",
     "express": "^5.1.0",
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.18.0",
@@ -24,7 +26,6 @@
   "dependencies": {
     "@types/dotenv": "^8.2.3",
     "bcrypt": "^6.0.0",
-    "dotenv": "^17.2.1",
     "typescipt": "^1.0.0"
   }
 }

@@ -22,7 +22,7 @@ app.post("/posts", async (req, res) => {
   res.json(post);
 });
 
-app.get
+
 
 // Read All Posts
 app.get("/posts", async (req, res) => {
