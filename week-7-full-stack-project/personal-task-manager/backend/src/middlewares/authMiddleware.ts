@@ -13,6 +13,7 @@ export class authMiddleware{
   }
 
     async userExist(req:Request, res: Response, next:NextFunction){
+      
         try {
             const {username}= req.body;
             const prisma = new PrismaClient();
