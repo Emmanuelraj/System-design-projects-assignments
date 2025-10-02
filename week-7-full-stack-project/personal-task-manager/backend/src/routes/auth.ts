@@ -21,6 +21,7 @@ const auth = new authMiddleware();
 
 router.post('/signup',auth.userExist,async(req,res)=>{
     try {
+        console.log("signup called")
         const {username, password, userId} = req.body;
         const hashedPassword = await bcrypt.hash(password, rounds);
     

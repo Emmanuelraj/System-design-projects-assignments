@@ -53,7 +53,12 @@ router.get('/', task.userAuthenticated,async(req,res)=>{
   } catch (error) {
    res.status(500).send("error message"+error);
   }    
-})
+});
+
+
+router.get('/hello', (req,res)=>{
+   res.json({ message: "hello" });  // ✅ send JSON
+});
 
 
 
