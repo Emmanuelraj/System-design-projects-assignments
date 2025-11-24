@@ -7,10 +7,10 @@ import express, { Request, Response } from 'express';
 // Import ollama – for local LLM generation (answer from retrieved chunks)
 import ollama from 'ollama';  // npm i ollama
 
-// Create Express app – the server to handle HTTP requests (e.g., /chunk, /store, /qa)
+// Create Express app – the server to handle HTTP requests
 const app = express();
 
-// Middleware to parse JSON bodies – if POST requests come later (not needed for GET endpoints)
+// Middleware to parse JSON bodies – if POST requests come later (not needed for GET /qa-transcript)
 app.use(express.json());
 
 // Hardcoded transcript – this is your starting point, a single string from Graph API (joined utterances)
@@ -43,6 +43,9 @@ const transcript: string = `[Meeting Transcript - Project Alpha Kickoff - Oct 15
 [10:24] Eve: Budget approval? Yes, from finance last week.
 
 [10:26] Alice: Wrap-up. Action items: Bob – setup pgvector table by Friday. Carol – finalize wireframes. All – review transcript summary via bot. Meeting adjourned at 10:30.`;
+
+// Global "store" – in-memory array for embeddings (dev alternative to DB)
+let vectorStore: { chunk: string; embedding: number[] }[] = [];
 
 // Step 1: Chunking function – takes transcript string, breaks into array of strings (chunks)
 function chunkTranscript(transcript: string, chunkSize: number = 400, overlap: number = 50): string[] {
@@ -109,9 +112,6 @@ async function embedChunks(chunks: string[]): Promise<{ chunk: string; embedding
   return embeddings;
 }
 
-// Global "store" – in-memory array for embeddings (dev alternative to DB)
-let vectorStore: { chunk: string; embedding: number[] }[] = [];
-
 // Step 3: "Store" embeddings in-memory – takes embeddings array, adds to global array
 function storeEmbeddings(embeddings: { chunk: string; embedding: number[] }[]): number[] {
   // Clear old for fresh start – vectorStore = [] (dev reset)
@@ -128,108 +128,42 @@ function storeEmbeddings(embeddings: { chunk: string; embedding: number[] }[]): 
   return insertedIds;
 }
 
-
-
-// /chunk endpoint – GET request to test chunking (Step 1)
-app.get('/chunk', async (req: Request, res: Response) => {
-  try {
-    // Call chunkTranscript with hardcoded transcript – gets array of chunks
-    const chunks = chunkTranscript(transcript);
-    // Send JSON response – success true, total chunks count, word count of original
-    res.json({
-      success: true,
-      totalChunks: chunks.length,  // Dynamic – 2 for sample
-      transcriptWords: transcript.split(/\s+/).length,  // Total words in transcript
-      chunks: chunks.map((c, i) => ({ id: i + 1, preview: c.substring(0, 150) + '...' }))  // Map to objects with ID and short preview
-    });
-  } catch (error) {
-    // If error (e.g., bad transcript), log it and send 500 error JSON
-    console.error('Chunk error:', error);
-    res.status(500).json({ success: false, error: 'Chunking failed' });
-  }
-});
-
-// /embed endpoint – GET request to test embedding (Step 2, after chunking)
-app.get('/embed', async (req: Request, res: Response) => {
-  try {
-    // First, get chunks from Step 1 – call chunkTranscript
-    const chunks = chunkTranscript(transcript);
-    // Then, embed those chunks – call embedChunks (async, so await)
-    const embeddings = await embedChunks(chunks);
-    // Send JSON response – success true, total embeddings count, word count of original
-    res.json({
-      success: true,
-      totalChunks: embeddings.length,  // Same as chunks – 2 for sample
-      transcriptWords: transcript.split(/\s+/).length,  // Total words in transcript
-      embeddings: embeddings.map((item, i) => ({ 
-        id: i + 1,  // Chunk ID
-        chunkPreview: item.chunk.substring(0, 150) + '...',  // Short preview of original chunk
-        embeddingPreview: item.embedding.slice(0, 10).join(', ') + '... (full 384)',  // First 10 numbers of vector + note
-        embeddingLength: item.embedding.length  // Always 384 for this model
-      }))  // Map to objects with ID, preview, and vector snippet
-    });
-  } catch (error) {
-    // If error (e.g., model load fail), log it and send 500 error JSON
-    console.error('Embed error:', error);
-    res.status(500).json({ success: false, error: 'Embedding failed' });
-  }
-});
-
-// /store endpoint – GET request to test storing (Step 3, chains 1-2)
-app.get('/store', async (req: Request, res: Response) => {
-  try {
-    // Chain Step 1: Get chunks
-    const chunks = chunkTranscript(transcript);
-    // Chain Step 2: Embed chunks
-    const embeddings = await embedChunks(chunks);
-    // Chain Step 3: Store in-memory
-    const ids = storeEmbeddings(embeddings);
-    // Send JSON response – success true, total stored, previews with IDs
-    res.json({
-      success: true,
-      totalStored: embeddings.length,  // 2 for sample
-      transcriptWords: transcript.split(/\s+/).length,
-      stored: embeddings.map((item, i) => ({ 
-        id: ids[i],  // "ID" as index
-        chunkPreview: item.chunk.substring(0, 150) + '...',  // Short preview
-        embeddingPreview: item.embedding.slice(0, 10).join(', ') + '... (full 384)',  // Vector snippet
-        embeddingLength: item.embedding.length  // 384
-      }))
-    });
-  } catch (error) {
-    // If error, log it and send 500 JSON
-    console.error('Store error:', error);
-    res.status(500).json({ success: false, error: 'Storing failed' });
-  }
-});
-// Step 4: Retrieve function – embeds question, finds top matching chunks from store
+// Step 4: Retrieve – embed question, find top matching chunks from store
 async function retrieveChunks(question: string, topK: number = 2): Promise<{ chunk: string; score: number }[]> {
   // Load extractor for question vector – same model as embed
   const extractor = await pipeline('feature-extraction', 'Xenova/all-MiniLM-L6-v2');
-  // Extract question embedding – mean pooling, normalize for similarity
+  // Extract question embedding – mean pooling, normalize
   const output = await extractor(question, { pooling: 'mean', normalize: true });
-  const queryEmbedding = Array.from(output.data) as number[];  // 384 floats for question
+  const queryEmbedding = Array.from(output.data) as number[];
 
   // Cosine similarity function – math to score how close vectors are (0-1, 1 = identical meaning)
   function cosineSimilarity(vecA: number[], vecB: number[]): number {
-    const dot = vecA.reduce((sum, a, i) => sum + a * vecB[i], 0);  // Dot product (sum a[i]*b[i])
-    const magA = Math.sqrt(vecA.reduce((sum, a) => sum + a * a, 0));  // Magnitude A (sqrt sum a^2)
-    const magB = Math.sqrt(vecB.reduce((sum, b) => sum + b * b, 0));  // Magnitude B (sqrt sum b^2)
+    const dot = vecA.reduce((sum, a, i) => sum + a * vecB[i], 0);  // Dot product
+    const magA = Math.sqrt(vecA.reduce((sum, a) => sum + a * a, 0));  // Magnitude A
+    const magB = Math.sqrt(vecB.reduce((sum, b) => sum + b * b, 0));  // Magnitude B
     return dot / (magA * magB);  // Cosine = dot / (magA * magB)
   }
 
   // Map store to scores – loop vectorStore, compute similarity for each
   const scored = vectorStore.map(item => ({
-    chunk: item.chunk,  // Original chunk text
-    score: cosineSimilarity(queryEmbedding, item.embedding)  // Similarity score
+    chunk: item.chunk,
+    score: cosineSimilarity(queryEmbedding, item.embedding)
   }));
 
-  // Filter >0.3 (relevant, lenient for testing), sort descending (highest first), slice topK
-  return scored.filter(item => item.score > 0.3)
+  // DEBUG: Log all scores to see what's happening
+  console.log(`Scores for "${question}":`, scored.map(s => ({ preview: s.chunk.substring(0, 50) + '...', score: s.score.toFixed(3) })));
+
+  // FIXED: Filter >0.2 (lenient for short samples – catches 0.201), sort descending, slice topK
+  // Fallback: If no matches >0.2, take top 1 anyway for testing
+  let filtered = scored.filter(item => item.score > 0.2)
     .sort((a, b) => b.score - a.score)
     .slice(0, topK);
+  if (filtered.length === 0) {
+    filtered = scored.sort((a, b) => b.score - a.score).slice(0, topK);  // Fallback to top even if low
+    console.log('Fallback: No matches >0.2, using top scores');
+  }
+  return filtered;
 }
-
 // Step 5: Generate answer – stuff retrieved chunks into Ollama prompt
 async function generateAnswer(question: string, retrieved: { chunk: string; score: number }[]): Promise<string> {
   if (retrieved.length === 0) return 'No relevant info in transcript.';
@@ -249,35 +183,19 @@ async function generateAnswer(question: string, retrieved: { chunk: string; scor
   return response.message.content.trim();
 }
 
-// /retrieve endpoint – GET request to test retrieval (Step 4, assumes /store run first)
-app.get('/retrieve', async (req: Request, res: Response) => {
+// Single API endpoint – GET /qa-transcript?question=What is the agenda? (chains all steps: chunk → embed → store → retrieve → generate)
+app.get('/qa-transcript', async (req: Request, res: Response) => {
   try {
     const { question = "What is the agenda?" } = req.query;  // Get question from query param (default sample)
-    if (vectorStore.length === 0) return res.json({ success: false, error: 'Store embeddings first (/store)' });  // Check if store run
-    // Call retrieveChunks – gets top matches
+    // Chain Step 1: Get chunks from transcript
+    const chunks = chunkTranscript(transcript);
+    // Chain Step 2: Embed chunks to vectors
+    const embeddings = await embedChunks(chunks);
+    // Chain Step 3: Store embeddings in-memory
+    storeEmbeddings(embeddings);
+    // Chain Step 4: Retrieve top matching chunks for question
     const retrieved = await retrieveChunks(question as string);
-    // Send JSON response – success true, retrieved count, chunks with scores
-    res.json({
-      success: true,
-      question,  // Echo question
-      retrievedChunks: retrieved.length,  // Number of matches
-      chunks: retrieved  // Array with chunk text + score
-    });
-  } catch (error) {
-    // If error (e.g., model load), log it and send 500 JSON
-    console.error('Retrieve error:', error);
-    res.status(500).json({ success: false, error: 'Retrieval failed' });
-  }
-});
-
-// /qa endpoint – GET request to test full Q&A (Steps 4-5, chains retrieve + generate)
-app.get('/qa', async (req: Request, res: Response) => {
-  try {
-    const { question = "What is the agenda?" } = req.query;  // Get question from query param (default sample)
-    if (vectorStore.length === 0) return res.json({ success: false, error: 'Store embeddings first (/store)' });  // Check if store run
-    // Step 4: Retrieve top chunks
-    const retrieved = await retrieveChunks(question as string);
-    // Step 5: Generate answer from retrieved
+    // Chain Step 5: Generate answer from retrieved chunks
     const answer = await generateAnswer(question as string, retrieved);
     // Send JSON response – success true, question, retrieved count, final answer
     res.json({
@@ -288,15 +206,14 @@ app.get('/qa', async (req: Request, res: Response) => {
     });
   } catch (error) {
     // If error, log it and send 500 JSON
-    console.error('QA error:', error);
+    console.error('QA-transcript error:', error);
     res.status(500).json({ success: false, error: 'QA failed' });
   }
 });
 
 // Start server on port 3000 – listens for requests
 app.listen(3000, () => {
-  // Log server start – with test commands
-  console.log('Full RAG Q&A Server on http://localhost:3000');
-  console.log('Prep: GET /store');
-  console.log('Test: GET /qa?question=What%20is%20the%20agenda?');
+  // Log server start – with test command
+  console.log('RAG Q&A Server on http://localhost:3000');
+  console.log('Test: GET /qa-transcript?question=What%20is%20the%20agenda?');
 });
