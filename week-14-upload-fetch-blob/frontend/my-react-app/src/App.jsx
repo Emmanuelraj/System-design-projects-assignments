@@ -4,7 +4,7 @@ import './App.css';  // Optional styles
 function App() {
   const [postId, setPostId] = useState('123');
   const [message, setMessage] = useState('');
-  const [files, setFiles] = useState([]);
+  const [files, setFiles] = useState([]);  // Array of selected File objects
   const [attachments, setAttachments] = useState([]);
   const [selectedFile, setSelectedFile] = useState(null);
 
@@ -37,7 +37,7 @@ function App() {
       const data = await res.json();
       if (data.success) {
         setMessage('');
-        setFiles([]);
+        setFiles([]);  // Clear selected
         fetchAttachments();
         alert('Upload done!');
       }
@@ -47,7 +47,16 @@ function App() {
   };
 
   const handleFileChange = (e) => {
-    setFiles(Array.from(e.target.files));
+    const newFiles = Array.from(e.target.files);
+    setFiles(prevFiles => [...prevFiles, ...newFiles]);  // Append to existing (allows multiple selects)
+  };
+
+  const removeFile = (indexToRemove) => {
+    setFiles(prevFiles => prevFiles.filter((_, index) => index !== indexToRemove));
+  };
+
+  const clearAllFiles = () => {
+    setFiles([]);
   };
 
   const handleCardClick = (attachment) => {
@@ -56,6 +65,24 @@ function App() {
 
   const closeModal = () => {
     setSelectedFile(null);
+  };
+
+  // Helper: Get icon for file preview
+  const getFileIcon = (file) => {
+    const type = file.type;
+    if (type.startsWith('image/')) return '🖼️';
+    if (type.startsWith('video/')) return '🎥';
+    if (type === 'application/pdf') return '📄';
+    if (type.includes('spreadsheet')) return '📊';  // XLSX
+    if (type.includes('word')) return '📝';  // DOCX
+    return '📎';  // Generic
+  };
+
+  // Helper: Format file size
+  const formatSize = (bytes) => {
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
   };
 
   return (
@@ -81,7 +108,33 @@ function App() {
           accept=""  // All MIME types
           onChange={handleFileChange} 
         />
-        <button type="submit">Submit</button>
+        {files.length > 0 && (
+          <div style={{ border: '1px solid #ddd', padding: '10px', borderRadius: '4px', maxHeight: '150px', overflowY: 'auto' }}>
+            <h4>Selected Files ({files.length})</h4>
+            <ul style={{ listStyle: 'none', padding: 0, display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
+              {files.map((file, index) => (
+                <li key={index} style={{ display: 'flex', alignItems: 'center', background: '#f8f9fa', padding: '5px', borderRadius: '4px', fontSize: '12px' }}>
+                  {getFileIcon(file)} {file.name} ({formatSize(file.size)})
+                  <button 
+                    type="button" 
+                    onClick={() => removeFile(index)} 
+                    style={{ marginLeft: '5px', background: '#dc3545', color: 'white', border: 'none', padding: '2px 6px', borderRadius: '2px', cursor: 'pointer', fontSize: '10px' }}
+                  >
+                    Remove
+                  </button>
+                </li>
+              ))}
+            </ul>
+            <button 
+              type="button" 
+              onClick={clearAllFiles} 
+              style={{ marginTop: '5px', background: '#6c757d', color: 'white', border: 'none', padding: '4px 8px', borderRadius: '4px', cursor: 'pointer', fontSize: '12px' }}
+            >
+              Clear All
+            </button>
+          </div>
+        )}
+        <button type="submit" disabled={files.length > 50}>Submit</button>  {/* Optional: Limit to 50 */}
       </form>
 
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
@@ -104,8 +157,8 @@ function App() {
               <video src={att.url} style={{ width: '100%', height: '100px' }} muted preload="metadata" />
             )}
             {att.type === 'application/pdf' && (
-              <div style={{ height: '100px', background: '#f0f0f0', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                📄 PDF
+              <div style={{ height: '100px', background: '#f0f0f0', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '40px' }}>
+                📄
               </div>
             )}
             {/* Fallback for all other MIME types */}
