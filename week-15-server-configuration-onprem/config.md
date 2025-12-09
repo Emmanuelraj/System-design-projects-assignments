@@ -94,8 +94,9 @@ gitlab-runner start
 ## ✅ 5. Register the GitLab Runner
 
 Go to:
+**GitLab → Your Project → Settings → CI/CD → Runners → Registration Token**
 
-**GitLab → Settings → CI/CD → Runners → Expand → Registration Token**
+//**GitLab → Your Project → Settings → CI/CD → Runners → Registration Token**
 
 On Windows server, run:
 
