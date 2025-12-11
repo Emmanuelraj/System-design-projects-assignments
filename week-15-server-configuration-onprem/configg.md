@@ -212,6 +212,33 @@ deploy_to_windows:
 
   only:
     - main
+
+
+```
+```
+stages:
+  - deploy
+
+deploy_to_windows:
+  stage: deploy
+  tags:
+    - windows
+  script:
+    - echo "Fetching latest code..."
+    - git fetch --all
+    - git reset --hard origin/main
+
+    - echo "Installing dependencies..."
+    - npm install
+
+    - echo "Using PORT from GitLab CI/CD variables: $PORT"
+
+    # Pass PORT to PM2 when starting (restart inherits env automatically)
+    - echo "Restarting PM2..."
+    - pm2 restart crud-notes-app || PORT=$PORT pm2 start src/index.js --name crud-notes-app
+
+  only:
+    - main
 ```
 
 This automatically deploys whenever you push to **main**.
