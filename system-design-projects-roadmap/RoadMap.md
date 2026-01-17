@@ -10,7 +10,7 @@
 
 ### Week 1 – HTML, CSS, JS Basics (19 Jan - 24Jan)
 
-* [ ] HTML Basics (Tags and Attributes)
+* [ ✅] HTML Basics (Tags and Attributes)
 * [ ] CSS Basics
 * [ ] 1.2 | JavaScript Basics
 
