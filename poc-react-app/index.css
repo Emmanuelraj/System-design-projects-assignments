@@ -1,0 +1,115 @@
+@import "tailwindcss";
+
+@layer components {
+
+  /* --- Layout & Global --- */
+  .page-layout {
+    @apply min-h-screen bg-gray-100 flex flex-col;
+  }
+
+  .main-content {
+    @apply flex-1 flex items-center justify-center p-6;
+  }
+
+  /* --- Navbar Component --- */
+  .header-bar {
+    @apply flex items-center justify-between px-6 py-3 bg-white shadow-sm border-b sticky top-0 z-50;
+  }
+
+  .search-bar {
+    @apply bg-gray-100 border border-gray-200 rounded-full px-4 py-2 w-96 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all;
+  }
+
+  .nav-group {
+    @apply flex items-center gap-4;
+  }
+
+  .btn-create {
+    @apply px-4 py-2 border-2 border-black rounded-lg font-medium hover:bg-black hover:text-white transition-all cursor-pointer;
+  }
+
+  .profile-section {
+    @apply relative flex items-center gap-2 cursor-pointer p-2 rounded-lg hover:bg-gray-50;
+  }
+
+  .profile-circle {
+    @apply w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center font-bold text-gray-600 border-2 border-white shadow-sm;
+  }
+
+  .dropdown-menu {
+    @apply absolute right-0 top-full mt-2 bg-white border border-gray-100 shadow-xl rounded-xl py-2 w-48 z-50 origin-top-right;
+  }
+
+  .dropdown-item {
+    @apply px-4 py-2 hover:bg-red-50 hover:text-red-600 transition-colors flex items-center gap-2 text-gray-700 cursor-pointer;
+  }
+
+  /* --- Create Post Page --- */
+  .cp-page {
+    @apply min-h-screen bg-gray-100 flex flex-col font-sans text-gray-800;
+  }
+
+  .cp-header {
+    @apply w-full bg-white py-4 text-center font-bold border-b border-gray-200 sticky top-0 z-50;
+  }
+
+  .cp-container {
+    @apply flex flex-1 max-w-7xl mx-auto w-full gap-6 px-6 py-6;
+  }
+
+  .cp-sidebar {
+    @apply w-64 bg-white rounded-3xl p-8 flex flex-col gap-6 border border-gray-200 shadow-sm h-fit sticky top-[88px];
+  }
+
+  .cp-nav-button {
+    @apply w-full flex items-center justify-between p-3 rounded-xl border border-transparent hover:border-gray-200 hover:bg-gray-50 transition-all text-left;
+  }
+
+  .cp-main-column {
+    @apply flex-1 flex flex-col gap-6;
+  }
+
+  .cp-card {
+    @apply bg-white rounded-3xl p-10 border border-gray-200 shadow-sm space-y-4 scroll-mt-[88px];
+  }
+
+  .cp-inner-section {
+    @apply bg-gray-50 rounded-[2.5rem] p-10 border border-gray-200 space-y-8;
+  }
+
+  .cp-input {
+    @apply w-full bg-gray-50 rounded-2xl p-5 border-2 outline-none transition-all text-lg border-gray-200 focus:border-black;
+  }
+
+  .cp-input-white {
+    @apply w-full bg-white rounded-2xl p-5 border-2 outline-none transition-all shadow-sm border-gray-200 focus:border-black;
+  }
+
+  .cp-input-error {
+    @apply border-red-500 focus:border-red-600;
+  }
+
+  .cp-select {
+    @apply w-full bg-white rounded-2xl p-5 border-2 border-gray-200 outline-none cursor-pointer appearance-none font-medium focus:border-black transition-all;
+  }
+
+  .cp-btn-publish {
+    @apply w-full py-5 bg-black text-white rounded-2xl font-bold border-2 border-black shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all active:scale-[0.98];
+  }
+
+  .cp-btn-secondary {
+    @apply w-full py-5 bg-white text-gray-800 rounded-2xl border-2 border-gray-200 font-bold shadow-sm hover:border-black transition-all;
+  }
+
+  .cp-btn-danger {
+    @apply w-full py-5 bg-red-50 text-red-600 rounded-2xl border-2 border-red-100 font-bold hover:border-red-400 transition-all;
+  }
+
+  .cp-upload-box {
+    @apply border-4 border-dashed border-gray-200 rounded-[2.5rem] p-12 flex flex-col items-center justify-center gap-4 hover:border-black/20 transition-all text-center cursor-pointer;
+  }
+
+  .cp-validation-dot {
+    @apply w-5 h-5 bg-red-500 rounded-full flex items-center justify-center text-white text-[10px] font-bold animate-pulse shadow-sm;
+  }
+}
