@@ -2,11 +2,6 @@ import { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Navbar } from './Navbar';
 
-const dropdownData: Record<string, string[]> = {
-    Fruit: ["Apple", "Pineapple", "Banana", "Grapes"],
-    Country: ["India", "USA", "France", "Japan"]
-};
-
 export function CreatePost() {
     const navigate = useNavigate();
 
@@ -16,10 +11,9 @@ export function CreatePost() {
     const uploadRef = useRef<HTMLDivElement>(null);
 
     const [title, setTitle] = useState('');
+    const [body, setBody] = useState('');
     const [tags, setTags] = useState('');
     const [type, setType] = useState('');
-    const [category, setCategory] = useState('');
-    const [subCategory, setSubCategory] = useState('');
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
     const [isSubmitted, setIsSubmitted] = useState(false);
@@ -29,15 +23,36 @@ export function CreatePost() {
         setTouched(prev => ({ ...prev, [field]: true }));
     };
 
-    const handlePublish = () => {
+    const handlePublish = async () => {
         setIsSubmitted(true);
-        setTouched({ title: true, tags: true, type: true });
-        if (title && tags && type) {
-            console.log("Publishing...");
+        setTouched({ title: true, body: true, tags: true, type: true });
+        
+        if (title && body && tags && type) {
+            const postData = {
+                title,
+                body,
+                userId: "Emmanuel Raj",
+                type,
+                imageUrl: selectedFile ? URL.createObjectURL(selectedFile) : "https://images.unsplash.com/photo-1499750310107-5fef28a66643?q=80&w=2070&auto=format&fit=crop",
+                tags: tags.split(',').map(tag => tag.trim()).filter(t => t)
+            };
+
+            try {
+                const response = await fetch('http://localhost:8080/api/posts', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(postData)
+                });
+
+                if (response.ok) {
+                    navigate('/home');
+                }
+            } catch (error) {
+                console.error("Error:", error);
+            }
         } else {
-            // Scroll to the first error
             if (!title) scrollToSection(titleRef);
-            else if (!tags || !type) scrollToSection(detailsRef);
+            else if (!body || !tags || !type) scrollToSection(detailsRef);
         }
     };
 
@@ -63,7 +78,7 @@ export function CreatePost() {
 
                 {/* Left Navigation Sidebar */}
                 <div className="cp-sidebar top-[100px]">
-                    <button 
+                    <button
                         onClick={() => navigate('/home')}
                         className="flex items-center gap-2 text-gray-500 hover:text-black mb-2 transition-colors font-bold text-sm group"
                     >
@@ -87,7 +102,7 @@ export function CreatePost() {
                             className="cp-nav-button group text-gray-400"
                         >
                             <span className="group-hover:text-black transition-colors">Post Details</span>
-                            {(showError('tags', tags) || showError('type', type)) && <ValidationIcon />}
+                            {(showError('body', body) || showError('tags', tags) || showError('type', type)) && <ValidationIcon />}
                         </button>
                         <button
                             onClick={() => scrollToSection(uploadRef)}
@@ -117,6 +132,21 @@ export function CreatePost() {
                             value={title}
                             onChange={(e) => setTitle(e.target.value)}
                             onBlur={() => handleBlur('title')}
+                        />
+                    </div>
+
+                    {/* Post Body Section */}
+                    <div className="cp-card !scroll-mt-[100px]">
+                        <div className="flex items-center gap-3">
+                            <label className="font-bold text-xl tracking-tight">Post Content (Body)</label>
+                            {showError('body', body) && <ValidationIcon />}
+                        </div>
+                        <textarea
+                            className={`cp-input min-h-[150px] py-4 ${showError('body', body) && 'cp-input-error'}`}
+                            placeholder="Tell your story..."
+                            value={body}
+                            onChange={(e) => setBody(e.target.value)}
+                            onBlur={() => handleBlur('body')}
                         />
                     </div>
 
@@ -151,61 +181,6 @@ export function CreatePost() {
                                     onChange={(e) => setType(e.target.value)}
                                     onBlur={() => handleBlur('type')}
                                 />
-                            </div>
-
-                            <div className="relative pt-6">
-                                <div className="space-y-4">
-                                    <label className="font-bold text-lg text-gray-700">Category Select</label>
-                                    <select
-                                        className="cp-select"
-                                        value={category}
-                                        onChange={(e) => {
-                                            const newCat = e.target.value;
-                                            setCategory(newCat);
-                                            // Clear subCategory if it doesn't belong to the new category
-                                            if (newCat && subCategory && !dropdownData[newCat].includes(subCategory)) {
-                                                setSubCategory('');
-                                            }
-                                        }}
-                                    >
-                                        <option value="">Select Category...</option>
-                                        <option value="Fruit">Fruit</option>
-                                        <option value="Country">Country</option>
-                                    </select>
-                                </div>
-
-                                <div className="flex justify-center py-4">
-                                    <div className="w-1 h-8 bg-gray-300 rounded-full relative">
-                                        <div className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-1/2 border-[6px] border-transparent border-t-gray-300"></div>
-                                    </div>
-                                </div>
-
-                                <div className="space-y-4">
-                                    <label className="font-bold text-lg text-gray-400 italic">Selection Items</label>
-                                    <select
-                                        className="cp-select"
-                                        value={subCategory}
-                                        onChange={(e) => {
-                                            const newSub = e.target.value;
-                                            setSubCategory(newSub);
-                                            if (newSub) {
-                                                // Automatically find and set the category
-                                                for (const [cat, items] of Object.entries(dropdownData)) {
-                                                    if (items.includes(newSub)) {
-                                                        setCategory(cat);
-                                                        break;
-                                                    }
-                                                }
-                                            }
-                                        }}
-                                    >
-                                        <option value="">{category ? `Select ${category}...` : 'Select Item...'}</option>
-                                        {category
-                                            ? dropdownData[category].map(item => <option key={item} value={item}>{item}</option>)
-                                            : Object.values(dropdownData).flat().map(item => <option key={item} value={item}>{item}</option>)
-                                        }
-                                    </select>
-                                </div>
                             </div>
                         </div>
                     </div>
